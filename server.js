@@ -2,9 +2,38 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 
-const mongoUrl = process.env.MONGO_URL || "mongodb://localhost/project-mongo";
+const mongoUrl = process.env.MONGO_URL || "mongodb://localhost/project-happy-thoughts-api";
 mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.Promise = Promise;
+
+const { Schema } = mongoose;
+
+const ThoughtSchema = new Schema({
+  message: {
+    type: String,
+    required: true,
+    unique: true,
+    minlength: 5,
+    maxlength: 140
+  },
+  name: {
+    type: String,
+    required: true,
+    minlength: 1,
+    maxlength: 30
+  },
+  hearts: {
+    type: Number,
+    default: 0
+  },
+  createdAt: {
+    type: Date,
+    default: () => new Date()
+  }
+});
+
+
+const Thought = mongoose.model("Thought", thoughtSchema);
 
 // Defines the port the app will run on. Defaults to 8080, but can be overridden
 // when starting the server. Example command to overwrite PORT env variable value:
@@ -15,43 +44,19 @@ const app = express();
 // Add middlewares to enable cors and json body parsing
 app.use(cors());
 app.use(express.json());
+const listEndpoints = require('express-list-endpoints')
 
 // Start defining your routes here
 app.get("/", (req, res) => {
-  res.send("Hello Technigo!");
+  res.send(listEndpoints(app));
 });
 
-const { Schema } = mongoose;
-const FruitOrVegetableSchema = new Schema({
-  name: {
-    // Most important one
-    type: String,
-    // Required true or false
-    required: true,
-    // Only a new name that is different than all the others is allowed
-    unique: true
-  },
-  description: {
-    type: String,
-    // set up max and min lenght
-    minlength: 4,
-    maxlength: 40,
-    // removes unnecessary white spaces from string
-    trim: true
-  },
-  createdAt: {
-    type: Date,
-    default: new Date()
-  },
-  kind: {
-    type: String,
-    // an array of all the allowed values
-    enum: ["fruit", "vegetables"]
-  }
+app.get("/thoughts", async (req, res) => {
+  const thoughts = await Thought.find().sort({createdAt: 'desc'}).limit(20).exec();
+  res.json(thoughts);
 });
 
 
-const FruitOrVegetable = mongoose.model("FruitOrVegetable", FruitOrVegetableSchema)
 
 app.post("/fruit_or_vegetable", async (req, res) => {
   const {kind, name, description} = req.body;
