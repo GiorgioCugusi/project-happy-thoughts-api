@@ -33,7 +33,7 @@ const ThoughtSchema = new Schema({
 });
 
 
-const Thought = mongoose.model("Thought", thoughtSchema);
+const Thought = mongoose.model("Thought", ThoughtSchema);
 
 // Defines the port the app will run on. Defaults to 8080, but can be overridden
 // when starting the server. Example command to overwrite PORT env variable value:
